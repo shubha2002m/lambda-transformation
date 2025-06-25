@@ -57,7 +57,7 @@ Transforms valid data to the `TargetOrderModel` format:
 
 ### 1. `POST /order_data_producer`
 #### 📨 Sample Payload
-```json
+
 {
   "orderId": "ORD-12345",
   "orderDate": "10/15/2023",
@@ -88,23 +88,27 @@ Transforms valid data to the `TargetOrderModel` format:
 }
 
 
-###2. GET /order_data_producer/healthCheck
-Verifies that the Lambda function is reachable and responsive.
+### 2. GET /order_data_producer/healthCheck
 
+Verifies that the Lambda function is reachable and responsive.
 ✅ Response
 {
   "status": "healthy"
 }
 
-##⚙️ Environment Setup
-Set up SSM parameter:
-Key: /order/producer/webhook-url
-Value: The destination webhook URL
+## ⚙️ Environment Setup
 
-IAM Permissions required:
-Lambda should have ssm:GetParameter for the key above.
+Set up SSM parameter:  
+**Key:** `/order/producer/webhook-url`  
+**Value:** The destination webhook URL
 
-###🧪 Testing
+**IAM Permissions required:**  
+Lambda should have `ssm:GetParameter` for the key above.
+
+---
+
+### 🧪 Testing
+
 Run unit tests using:
 npx jest
 
@@ -117,4 +121,4 @@ Health check handler
 
 
 
-Accepts and processes order payloads.
+

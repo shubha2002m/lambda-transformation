@@ -12,15 +12,13 @@ This service is an AWS Lambda function that:
 
 ## 📁 Project Structure
 
-lambda/
-├── index.ts # Lambda handler
-├── validator.ts # Input validation logic
-├── transformer.ts # Data transformation logic
-├── publisher.ts # Sends transformed data to webhook
-├── logger.ts # Centralized logger
-├── types.ts # Type definitions
-└── test/
-└── lambdaHandler.test.ts # Jest test suite
+index.ts – Main Lambda handler
+validator.ts – Input validation
+transformer.ts – Data transformation
+publisher.ts – Webhook sender
+logger.ts – Logging utility
+types.ts – Type definitions
+test/ – Jest test suite
 
 ## 🧠 Functionality
 

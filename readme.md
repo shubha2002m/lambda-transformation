@@ -1,66 +1,63 @@
-📦 Order Data Producer – Lambda Service
+# 📦 Order Data Producer – Lambda Service
+
 This service is an AWS Lambda function that:
 
-Accepts order data in a specific format
+- Accepts order data in a specific format  
+- Validates the data  
+- Transforms it into a new format  
+- Publishes it to a webhook  
+- Supports health check via HTTP GET  
 
-Validates the data
+---
 
-Transforms it into a new format
+## 📁 Project Structure
 
-Publishes it to a webhook
-
-Supports health check via HTTP GET
-
-📁 Project Structure
-bash
-Copy
-Edit
 lambda/
-├── index.ts             # Lambda handler
-├── validator.ts         # Input validation logic
-├── transformer.ts       # Data transformation logic
-├── publisher.ts         # Sends transformed data to webhook
-├── logger.ts            # Centralized logger
-├── types.ts             # Type definitions
+├── index.ts # Lambda handler
+├── validator.ts # Input validation logic
+├── transformer.ts # Data transformation logic
+├── publisher.ts # Sends transformed data to webhook
+├── logger.ts # Centralized logger
+├── types.ts # Type definitions
 └── test/
-    └── lambdaHandler.test.ts  # Jest test suite
-🧠 Functionality
-1. 🔍 Validation
-Ensures input SourceOrderData has all required fields and proper formats:
+└── lambdaHandler.test.ts # Jest test suite
 
-orderId must start with ORD-
+## 🧠 Functionality
 
-orderDate in MM/DD/YYYY
+### 🔍 Validation
 
-items[] must have positive quantities
+Validates incoming JSON against the `SourceOrderData` model:
 
-Valid values for status, paymentMethod, etc.
+- `orderId` starts with `ORD-`
+- `orderDate` in `MM/DD/YYYY` format
+- `items[]` must have positive `quantity`
+- Valid `status`, `paymentMethod`, and required shipping fields
 
-2. 🔄 Transformation
-Maps validated input into a new TargetOrderModel format:
+---
 
-Date reformatting
+### 🔄 Transformation
 
-Flattened and structured object hierarchy
+Transforms valid data to the `TargetOrderModel` format:
 
-Adds metadata.processedAt timestamp
+- Reformats date
+- Structures into nested format
+- Adds metadata like `processedAt` timestamp
 
-3. 🚀 Webhook Publishing
-Webhook URL is fetched from AWS SSM Parameter Store
+---
 
-Data is sent using axios.post()
+### 🚀 Webhook Publishing
 
-Logs success or errors centrally
+- Fetches destination webhook URL from AWS SSM Parameter Store
+- Sends transformed data via `axios.post()`
+- Logs success and failure centrally
 
-🌐 API Endpoints (via API Gateway)
-1. POST /order_data_producer
-Purpose: Accepts and processes order data.
+---
 
-Body Example:
+## 🌐 API Endpoints (via API Gateway)
 
-json
-Copy
-Edit
+### 1. `POST /order_data_producer`
+#### 📨 Sample Payload
+```json
 {
   "orderId": "ORD-12345",
   "orderDate": "10/15/2023",
@@ -82,48 +79,42 @@ Edit
   "status": "NEW",
   "notes": "Please deliver after 5pm"
 }
-Success Response:
 
-json
-Copy
-Edit
-{ "status": true, "orderId": "ORD-12345" }
-2. GET /order_data_producer/healthCheck
-Purpose: Verifies Lambda is deployed and responding.
 
-Response:
+✅ Success Response
+{
+  "status": true,
+  "orderId": "ORD-12345"
+}
 
-json
-Copy
-Edit
-{ "status": "healthy" }
-⚙️ Environment & Parameters
-Required SSM Parameter
+
+###2. GET /order_data_producer/healthCheck
+Verifies that the Lambda function is reachable and responsive.
+
+✅ Response
+{
+  "status": "healthy"
+}
+
+##⚙️ Environment Setup
+Set up SSM parameter:
 Key: /order/producer/webhook-url
+Value: The destination webhook URL
 
-Value: Webhook URL
+IAM Permissions required:
+Lambda should have ssm:GetParameter for the key above.
 
-🧪 Testing
-Run tests:
-
-bash
-Copy
-Edit
+###🧪 Testing
+Run unit tests using:
 npx jest
-Coverage:
-Handler (valid flow, invalid input, webhook error)
 
-Validator rules
-
+Covers:
+Lambda handler (happy path, invalid input, webhook failure)
+Validator logic
 Transformer logic
+Webhook publication
+Health check handler
 
-Webhook publisher
 
-Health check endpoint
 
-✅ Deployment Notes
-Ensure the Lambda has permission to read from SSM
-
-API Gateway routes must include /order_data_producer/healthCheck and POST /order_data_producer
-
-Set up SSM parameter /order/producer/webhook-url with webhook destination
+Accepts and processes order payloads.

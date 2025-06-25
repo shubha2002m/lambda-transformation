@@ -88,7 +88,7 @@ Transforms valid data to the `TargetOrderModel` format:
 }
 
 
-### 2. GET /order_data_producer/healthCheck
+### 2. `GET /order_data_producer/healthCheck`
 
 Verifies that the Lambda function is reachable and responsive.
 ✅ Response

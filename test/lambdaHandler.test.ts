@@ -1,11 +1,11 @@
-import { handler } from '../index';
-import { validateSourceData } from '../validator';
-import { transformData } from '../transformer';
-import { publishToWebhook } from '../publisher';
-import { logger } from '../logger';
+import { handler } from '../src/index';
+import { OrderValidator } from '../src/services/validator';
+import { OrderTransformer } from '../src/services/transformer';
+import { WebhookPublisher } from '../src/services/publisher';
+import { logger } from '../src/utils/logger';
 import * as AWS from 'aws-sdk';
 import axios from 'axios';
-import { SourceOrderData, TargetOrderModel } from '../types';
+import { SourceOrderData, TargetOrderModel } from '../src/models/interfaces';
 
 // Mock AWS SDK
 jest.mock('aws-sdk', () => {
@@ -27,7 +27,6 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 jest.spyOn(logger, 'info').mockImplementation();
 jest.spyOn(logger, 'error').mockImplementation();
 
-// Sample valid input
 const validInput: SourceOrderData = {
   orderId: 'ORD-12345',
   orderDate: '10/15/2023',
@@ -97,27 +96,27 @@ describe('Lambda Handler', () => {
   });
 });
 
-describe('Validator', () => {
+describe('OrderValidator', () => {
   test('should pass valid input', () => {
-    const errors = validateSourceData(validInput);
+    const errors = OrderValidator.validate(validInput);
     expect(errors).toBeNull();
   });
 
   test('should fail on missing required fields', () => {
     const invalidInput = { ...validInput, orderId: undefined };
-    const errors = validateSourceData(invalidInput as any);
+    const errors = OrderValidator.validate(invalidInput as any);
     expect(errors).toContain('orderId is required');
   });
 
   test('should fail on invalid date format', () => {
     const invalidInput = { ...validInput, orderDate: '2023-10-15' };
-    const errors = validateSourceData(invalidInput);
+    const errors = OrderValidator.validate(invalidInput);
     expect(errors).toContain('orderDate must be in MM/DD/YYYY format');
   });
 
   test('should fail on invalid status', () => {
     const invalidInput = { ...validInput, status: 'INVALID' };
-    const errors = validateSourceData(invalidInput);
+    const errors = OrderValidator.validate(invalidInput);
     expect(errors).toContain('status must be one of: NEW, PROCESSING, SHIPPED, DELIVERED, CANCELLED');
   });
 
@@ -126,30 +125,30 @@ describe('Validator', () => {
       ...validInput,
       items: [{ ...validInput.items[0], quantity: 0 }]
     };
-    const errors = validateSourceData(invalidInput);
+    const errors = OrderValidator.validate(invalidInput);
     expect(errors).toContain('items[0].quantity must be a positive number');
   });
 
   test('should fail on missing shipping address fields', () => {
-        const invalidInput: SourceOrderData = {
+    const invalidInput: SourceOrderData = {
       ...validInput,
       shippingAddress: {
         ...validInput.shippingAddress,
-        street: '', // This is the intended invalid value
+        street: '', // invalid
         city: 'Columbus',
         state: 'OH',
         zipCode: '43215',
         country: 'USA'
       }
     };
-    const errors = validateSourceData(invalidInput);
+    const errors = OrderValidator.validate(invalidInput);
     expect(errors).toContain('shippingAddress.street is required when shippingAddress is provided');
   });
 });
 
-describe('Transformer', () => {
+describe('OrderTransformer', () => {
   test('should transform valid input correctly', () => {
-    const result = transformData(validInput);
+    const result = OrderTransformer.transform(validInput);
     expect(result).toMatchObject({
       order: {
         id: 'ORD-12345',
@@ -189,22 +188,23 @@ describe('Transformer', () => {
   });
 });
 
-describe('Publisher', () => {
-   beforeEach(() => {
+describe('WebhookPublisher', () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    mockedAxios.post.mockResolvedValue({ status: 200 }); // reset it to success before each test
+    mockedAxios.post.mockResolvedValue({ status: 200 });
   });
+
   test('should publish to webhook successfully', async () => {
-    const transformedData = transformData(validInput);
-    await publishToWebhook('https://webhook.site/test', transformedData);
+    const transformedData = OrderTransformer.transform(validInput);
+    await WebhookPublisher.publish('https://webhook.site/test', transformedData);
     expect(mockedAxios.post).toHaveBeenCalledWith('https://webhook.site/test', transformedData);
     expect(logger.info).toHaveBeenCalledWith('Webhook published', expect.any(Object));
   });
 
   test('should throw error on webhook failure', async () => {
     mockedAxios.post.mockRejectedValue(new Error('Webhook failed'));
-    const transformedData = transformData(validInput);
-    await expect(publishToWebhook('https://webhook.site/test', transformedData)).rejects.toThrow('Webhook failed');
+    const transformedData = OrderTransformer.transform(validInput);
+    await expect(WebhookPublisher.publish('https://webhook.site/test', transformedData)).rejects.toThrow('Webhook failed');
     expect(logger.error).toHaveBeenCalled();
   });
 });

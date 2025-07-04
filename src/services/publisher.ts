@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { logger } from '../utils/logger';
-import { TargetOrderModel } from '../models/interfaces';
+import { TargetOrderModel } from '../models/TargetOrderModel';
 
 export class WebhookPublisher {
   static async publish(webhookUrl: string, data: TargetOrderModel): Promise<any> {

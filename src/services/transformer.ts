@@ -1,4 +1,5 @@
-import { SourceOrderData, TargetOrderModel } from '../models/interfaces';
+import {  TargetOrderModel } from '../models/TargetOrderModel';
+import { SourceOrderData } from '../models/SourceOrderModel';
 
 export class OrderTransformer {
   static transform(source: SourceOrderData): TargetOrderModel {

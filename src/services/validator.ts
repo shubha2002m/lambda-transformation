@@ -1,5 +1,6 @@
 import { validate as uuidValidate } from 'uuid';
-import { SourceOrderData } from '../models/interfaces';
+import { SourceOrderData } from '../models/SourceOrderModel';
+
 
 
 export class OrderValidator {

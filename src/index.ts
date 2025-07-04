@@ -3,7 +3,8 @@ import { OrderValidator } from './services/validator';
 import { OrderTransformer } from './services/transformer';
 import { WebhookPublisher } from './services/publisher';
 import { logger } from './utils/logger';
-import { SourceOrderData, TargetOrderModel } from './models/interfaces';
+import {  TargetOrderModel } from './models/TargetOrderModel';
+import { SourceOrderData } from './models/SourceOrderModel';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
